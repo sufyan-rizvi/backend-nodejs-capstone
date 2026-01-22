@@ -26,10 +26,7 @@ const upload = multer({ storage: storage });
 router.get('/', async (req, res, next) => {
     logger.info('/ called');
     try {
-        //Step 2: task 1 - insert code here
-        //Step 2: task 2 - insert code here
-        //Step 2: task 3 - insert code here
-        //Step 2: task 4 - insert code here
+        const db = await connectToDatabase()
 
         const collection = db.collection("secondChanceItems");
         const secondChanceItems = await collection.find({}).toArray();
@@ -41,55 +38,150 @@ router.get('/', async (req, res, next) => {
 });
 
 // Add a new item
-router.post('/', {Step 3: Task 6 insert code here}, async(req, res,next) => {
-    try {
-
-        //Step 3: task 1 - insert code here
-        //Step 3: task 2 - insert code here
-        //Step 3: task 3 - insert code here
-        //Step 3: task 4 - insert code here
-        //Step 3: task 5 - insert code here
-        res.status(201).json(secondChanceItem.ops[0]);
-    } catch (e) {
+// Add a new item
+router.post(
+    '/',
+    upload.single('image'), // Task 7: handle image upload
+    async (req, res, next) => {
+      try {
+        // Task 1: Connect to MongoDB
+        const db = await connectToDatabase();
+  
+        // Task 2: Get collection
+        const collection = db.collection('secondChanceItems');
+  
+        // Task 3: Create new item from request body
+        const newSecondChanceItem = req.body
+  
+        // Task 4: Get last id and increment
+        const lastItem = await collection
+          .find()
+          .sort({ id: -1 })
+          .limit(1)
+          .toArray();
+  
+        const newId = lastItem.length > 0 ? lastItem[0].id + 1 : 1;
+        newSecondChanceItem.id = newId;
+  
+        // Task 5: Set current date
+        newSecondChanceItem.dateCreated = new Date();
+  
+        // If image uploaded, save image path
+        if (req.file) {
+          newSecondChanceItem.image = `/images/${req.file.originalname}`;
+        }
+  
+        // Task 6: Insert into DB
+        const result = await collection.insertOne(newSecondChanceItem);
+  
+        // Respond with created item
+        res.status(201).json(result.ops[0]);
+      } catch (e) {
         next(e);
+      }
     }
-});
+  );
+  
 
+// Get a single secondChanceItem by ID
 // Get a single secondChanceItem by ID
 router.get('/:id', async (req, res, next) => {
     try {
-        //Step 4: task 1 - insert code here
-        //Step 4: task 2 - insert code here
-        //Step 4: task 3 - insert code here
-        //Step 4: task 4 - insert code here
+      // Step 4: Task 1 - connect to database
+      const db = await connectToDatabase();
+  
+      // Step 4: Task 2 - get collection
+      const collection = db.collection('secondChanceItems');
+  
+      // Step 4: Task 3 - find item by id
+      const id = parseInt(req.params.id);
+      const secondChanceItem = await collection.findOne({ id: id });
+  
+      // Step 4: Task 4 - return result or error
+      if (!secondChanceItem) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+  
+      res.json(secondChanceItem);
     } catch (e) {
-        next(e);
+      next(e);
     }
-});
+  });
+  
 
 // Update and existing item
-router.put('/:id', async(req, res,next) => {
+// Update an existing item
+router.put('/:id', async (req, res, next) => {
     try {
-        //Step 5: task 1 - insert code here
-        //Step 5: task 2 - insert code here
-        //Step 5: task 3 - insert code here
-        //Step 5: task 4 - insert code here
-        //Step 5: task 5 - insert code here
+      // Step 5: Task 1 - connect to database
+      const db = await connectToDatabase();
+  
+      // Step 5: Task 2 - get collection
+      const collection = db.collection('secondChanceItems');
+  
+      const id = parseInt(req.params.id);
+  
+      // Step 5: Task 3 - check if item exists
+      const existingItem = await collection.findOne({ id: id });
+  
+      if (!existingItem) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+  
+      // Step 5: Task 4 - update specific attributes
+      const { category, condition, age_days, description } = req.body;
+  
+      const age_years = Number((age_days / 365).toFixed(1));
+  
+      const updatedItem = {
+        category,
+        condition,
+        age_days,
+        age_years,
+        description,
+        updatedAt: new Date(),
+      };
+  
+      await collection.updateOne(
+        { id: id },
+        { $set: updatedItem }
+      );
+  
+      // Step 5: Task 5 - send confirmation
+      res.json({ message: 'Item updated successfully' });
     } catch (e) {
-        next(e);
+      next(e);
     }
-});
+  });
+  
 
 // Delete an existing item
-router.delete('/:id', async(req, res,next) => {
+// Delete an existing item
+router.delete('/:id', async (req, res, next) => {
     try {
-        //Step 6: task 1 - insert code here
-        //Step 6: task 2 - insert code here
-        //Step 6: task 3 - insert code here
-        //Step 6: task 4 - insert code here
+      // Step 6: Task 1 - connect to database
+      const db = await connectToDatabase();
+  
+      // Step 6: Task 2 - get collection
+      const collection = db.collection('secondChanceItems');
+  
+      const id = parseInt(req.params.id);
+  
+      // Step 6: Task 3 - check if item exists
+      const secondChanceItem = await collection.findOne({ id: id });
+  
+      if (!secondChanceItem) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+  
+      // Step 6: Task 4 - delete item
+      await collection.deleteOne({ id: id });
+  
+      res.json({ message: 'Item deleted successfully' });
     } catch (e) {
-        next(e);
+      next(e);
     }
-});
+  });
+  
 
 module.exports = router;
