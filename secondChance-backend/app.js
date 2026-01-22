@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const pinoLogger = require('./logger');
 const secondChanceItemsroutes = require('./routes/secondChanceItemsRoutes')
+const searchRoutes = require('./routes/searchRoutes')
 
 const connectToDatabase = require('./models/db');
 const {loadData} = require("./util/import-mongo/index");
@@ -25,13 +26,13 @@ app.use(express.json());
 // Route files
 
 // authRoutes Step 2: import the authRoutes and store in a constant called authRoutes
-app.use('/api/secondchance/items',secondChanceItemsroutes)
+
 
 // Items API Task 1: import the secondChanceItemsRoutes and store in a constant called secondChanceItemsRoutes
-//{{insert code here}}
+app.use('/api/secondchance/items',secondChanceItemsroutes)
 
 // Search API Task 1: import the searchRoutes and store in a constant called searchRoutes
-//{{insert code here}}
+app.use('/api/secondchance/search',searchRoutes)
 
 
 const pinoHttp = require('pino-http');
