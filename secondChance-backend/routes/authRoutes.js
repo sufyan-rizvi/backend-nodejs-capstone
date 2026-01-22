@@ -57,4 +57,54 @@ router.post('/register', async (req, res) => {
     }
 });
 
+router.post('/login', async (req, res) => {
+    try {
+        // Task 1: Connect to `secondChance` database
+        const db = await connectToDatabase();
+
+        // Task 2: Access users collection
+        const collection = db.collection("users");
+
+        // Task 3: Check for user credentials
+        const theUser = await collection.findOne({ email: req.body.email });
+
+        // Task 7: If user not found
+        if (!theUser) {
+            logger.error('User not found');
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Task 4: Compare passwords
+        const isMatch = await bcryptjs.compare(
+            req.body.password,
+            theUser.password
+        );
+
+        if (!isMatch) {
+            logger.error('Passwords do not match');
+            return res.status(401).json({ error: 'Wrong password' });
+        }
+
+        // Task 5: Fetch user details
+        const userName = theUser.firstName;
+        const userEmail = theUser.email;
+
+        // Task 6: Create JWT authentication
+        const payload = {
+            user: {
+                id: theUser._id,
+            },
+        };
+
+        const authtoken = jwt.sign(payload, JWT_SECRET);
+
+        // Success response
+        res.json({ authtoken, userName, userEmail });
+
+    } catch (e) {
+        return res.status(500).send('Internal server error');
+    }
+});
+
+
 module.exports = router;
