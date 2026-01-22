@@ -6,12 +6,15 @@ const pinoLogger = require('./logger');
 const secondChanceItemsroutes = require('./routes/secondChanceItemsRoutes')
 const searchRoutes = require('./routes/searchRoutes')
 const authRoutes = require('./routes/authRoutes')
+const path = require('path');
 
 const connectToDatabase = require('./models/db');
 const {loadData} = require("./util/import-mongo/index");
 
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use("*",cors());
 const port = 3060;
 
